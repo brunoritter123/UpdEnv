@@ -1,2 +1,2 @@
-fontes/__pycache__
-dados/db.sqlite3
+fontes/__pycache__/*
+dados/*
