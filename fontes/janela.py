@@ -4,6 +4,7 @@
 import re
 import tkinter as tk
 import tkinter.ttk as tkk
+import tkinter.filedialog as fdlg
 from tkinter import messagebox
 from fontes.conectarDb import ConectarDB
 
@@ -13,6 +14,9 @@ class Janela(tk.Frame):
 	def __init__(self, master=None):
 		"""Construtor"""
 		super().__init__(master)
+
+		self.root = master
+
 		# Coletando informações do monitor
 		largura = round(self.winfo_screenwidth() / 2)
 		altura = round(self.winfo_screenheight() / 2)
@@ -69,6 +73,12 @@ class Janela(tk.Frame):
 		# Método que é chamado quando o botão é clicado.
 		button_adicionar['command'] = self.adicionar_registro
 		button_adicionar.grid(row=0, column=3, rowspan=2, padx=10)
+
+		# Botão diretório
+		button_dir = tk.Button(frame1, text='Dir', bg='green', fg='white')
+		# Método que é chamado quando o botão é clicado.
+		button_dir['command'] = self.testeaskdirectory
+		button_dir.grid(row=0, column=4, rowspan=2, padx=10)
 
 		# Treeview.
 		self.treeview = tkk.Treeview(frame2, columns=('N° documento', 'Assunto', 'Data'))
@@ -129,3 +139,20 @@ class Janela(tk.Frame):
 
 			# Removendo valor do treeview.
 			self.treeview.delete(item_selecionado)
+
+	def testeaskdirectory(self):
+		#primeiro definimos as opções
+
+		opcoes = {}                 # as opções são definidas em um dicionário
+		#opcoes['defaultextension'] = '.txt'
+		#opcoes['filetypes'] = [('Todos arquivos', '.*'), ('arquivos texto', '.txt')]
+		opcoes['initialdir'] = ''    # será o diretório atual
+		#opcoes['initialfile'] = '' #apresenta todos os arquivos no diretorio
+		opcoes['parent'] = self.root
+		opcoes['title'] = 'Diálogo que retorna o nome do diretório selecionado'
+
+		#retorna o caminho completo  de um diretório
+
+		nomeDiretorio= fdlg.askdirectory(**opcoes)
+
+		print (nomeDiretorio)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Atualiza ambientes"""
 from fontes.janela import Janela
+from fontes.execConsole import ExecConsole
 import tkinter as tk
 import sys
 
@@ -16,7 +17,7 @@ for param in sys.argv:
 		print(f"Váriavel '{param}' foi ignorada.")
 
 if execConsole:
-	print("Execução via console")
+	ExecConsole()
 	input()
 
 else:
