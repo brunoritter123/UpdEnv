@@ -16,6 +16,7 @@ class Janela(tk.Frame):
 		super().__init__(master)
 
 		self.root = master
+		self.rowCadastro = 0
 
 		# Coletando informações do monitor
 		largura = round(self.winfo_screenwidth() / 2)
@@ -23,7 +24,7 @@ class Janela(tk.Frame):
 		tamanho = ('%sx%s' % (largura, altura))
 
 		# Título da janela principal.
-		master.title('Exemplo')
+		master.title('Update Environment')
 
 		# Tamanho da janela principal.
 		master.geometry(tamanho)
@@ -35,17 +36,42 @@ class Janela(tk.Frame):
 		self.pack()
 
 		# Criando os widgets da interface.
-		self.criar_widgets()
+		self.criar_widgets(master)
 
-	def criar_widgets(self):
+	def criar_widgets(self, master):
+		# Abas.
+		self.abasPrincipal = tkk.Notebook(master)
+		self.abaConsulta = tk.Frame(self.abasPrincipal)
+		self.abaCadastro = tk.Frame(self.abasPrincipal)
+
+		self.inclui_aba_consulta(hide = False)
+		self.abasPrincipal.pack(fill=tk.BOTH, expand=True)
+
+		self.inclui_widgets_consulta(self.abaConsulta)
+		self.inclui_widgets_cadastro(self.abaCadastro)
+
+
+	def inclui_aba_consulta(self, hide = True):
+		self.abasPrincipal.add(self.abaConsulta,text='Consulta')
+		if hide:
+			self.abasPrincipal.hide(1)
+			self.reset_cadastro()
+
+	def inclui_aba_cadastro(self, hide = True):
+		self.abasPrincipal.add(self.abaCadastro,text='Cadastro')
+		if hide:
+			self.abasPrincipal.hide(0)
+
+	def inclui_widgets_consulta(self, parent):
+
 		# Containers.
-		frame1 = tk.Frame(self)
+		frame1 = tk.Frame(parent)
 		frame1.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
 
-		frame2 = tk.Frame(self)
+		frame2 = tk.Frame(parent)
 		frame2.pack(fill=tk.BOTH, expand=True)
 
-		frame3 = tk.Frame(self)
+		frame3 = tk.Frame(parent)
 		frame3.pack(side=tk.BOTTOM, padx=5)
 
 		# Labels.
@@ -71,14 +97,8 @@ class Janela(tk.Frame):
 		# Botão para adicionar um novo registro.
 		button_adicionar = tk.Button(frame1, text='Adicionar', bg='blue', fg='white')
 		# Método que é chamado quando o botão é clicado.
-		button_adicionar['command'] = self.adicionar_registro
+		button_adicionar['command'] = self.inclui_aba_cadastro
 		button_adicionar.grid(row=0, column=3, rowspan=2, padx=10)
-
-		# Botão diretório
-		button_dir = tk.Button(frame1, text='Dir', bg='green', fg='white')
-		# Método que é chamado quando o botão é clicado.
-		button_dir['command'] = self.testeaskdirectory
-		button_dir.grid(row=0, column=4, rowspan=2, padx=10)
 
 		# Treeview.
 		self.treeview = tkk.Treeview(frame2, columns=('N° documento', 'Assunto', 'Data'))
@@ -98,6 +118,103 @@ class Janela(tk.Frame):
 		# Método que é chamado quando o botão é clicado.
 		button_excluir['command'] = self.excluir_registro
 		button_excluir.pack(pady=10)
+
+	def inclui_widgets_cadastro(self, parent):
+		# Containers.
+		frame1 = tk.Frame(parent)
+		frame1.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
+
+		frame2 = tk.Frame(parent)
+		frame2.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+		frame3 = tk.Frame(parent)
+		frame3.pack(side=tk.RIGHT, padx=5)
+
+		self.add_de_x_para(parent=frame1, name='Descrição', incluiPara = False, incluiBtn = False)
+
+		# Abas.
+		self.abasCadastro = tkk.Notebook(frame2)
+		abaDePara = tk.Frame(self.abasCadastro)
+		abaBanco = tk.Frame(self.abasCadastro)
+		abaFontes = tk.Frame(self.abasCadastro)
+
+		self.abasCadastro.add(abaDePara, text='Ambiente')
+		self.abasCadastro.add(abaBanco, text='Config. Banco')
+		self.abasCadastro.add(abaFontes, text='Fontes')
+		self.abasCadastro.pack(fill=tk.BOTH, expand=True)
+
+		self.inclui_widgets_De_Para(abaDePara)
+		self.inclui_widgets_Banco(abaBanco)
+		self.inclui_widgets_Fontes(abaFontes)
+
+		rowBtns = self.getRowCad()
+
+		btn_cancelar = tk.Button(frame3, text = 'Cancelar', bg='red', fg='white')
+		btn_cancelar['command'] = self.inclui_aba_consulta
+		btn_cancelar.grid(row=rowBtns, column=1, pady=10, padx=20)
+
+		btn_salvar = tk.Button(frame3, text = 'Salvar', bg='green', fg='white')
+		btn_salvar['command'] = lambda arg1='Salvo' : print(arg1)
+		btn_salvar.grid(row=rowBtns, column=2, pady=10, padx=20)
+
+	def inclui_widgets_De_Para(self, parent):
+		frameDePara = tk.Frame(parent)
+		frameDePara.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
+
+		label_de = tk.Label(frameDePara, text='Origem:')
+		label_de.grid(row=0, column=2)
+
+		label_x = tk.Label(frameDePara, text='x')
+		label_x.grid(row=0, column=4, padx=10)
+
+		label_para = tk.Label(frameDePara, text='Destino:')
+		label_para.grid(row=0, column=5)
+
+		self.add_de_x_para(parent=frameDePara, name='RPO', filetype='.rpo')
+		self.add_de_x_para(parent=frameDePara, name='Smart Client', filetype='.zip')
+		self.add_de_x_para(parent=frameDePara, name='Server', filetype='.zip')
+		self.add_de_x_para(parent=frameDePara, name='Includes', filetype='.zip')
+
+	def inclui_widgets_Banco(self, parent):
+		frameBanco = tk.Frame(parent)
+		frameBanco.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
+		self.add_de_x_para(parent=frameBanco, name='Bkp Banco', filetype='.bak', incluiPara = False)
+		self.add_de_x_para(parent=frameBanco, name='Servidor', incluiPara = False, incluiBtn = False)
+		self.add_de_x_para(parent=frameBanco, name='Nome Banco', incluiPara = False, incluiBtn = False)
+		self.add_de_x_para(parent=frameBanco, name='Usuário', incluiPara = False, incluiBtn = False)
+		self.add_de_x_para(parent=frameBanco, name='Senha', incluiPara = False, incluiBtn = False)
+
+	def inclui_widgets_Fontes(self, parent):
+		frameFontes = tk.Frame(parent)
+		frameFontes.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
+		self.add_de_x_para(parent=frameFontes, name='Fontes', incluiPara = False)
+		self.add_de_x_para(parent=frameFontes, name='Patch', filetype='.ptm', incluiPara = False)
+
+	def getRowCad(self):
+		self.rowCadastro += 1
+		return self.rowCadastro
+
+	def add_de_x_para(self, parent, name, filetype = None, incluiPara = True, incluiBtn = True):
+		rowDePara = self.getRowCad()
+
+		label = tk.Label(parent, text=name)
+		label.grid(row=rowDePara, column=1)
+
+		de = tk.Entry(parent, width=40)
+		de.grid(row=rowDePara, column=2, pady=5)
+		if incluiBtn:
+			btn_de = tk.Button(parent, text = '...', bg='blue', fg='white')
+			btn_de['command'] = lambda arg1=de, arg2=filetype : self.openDirectory(arg1, arg2)
+			btn_de.grid(row=rowDePara, column=3, pady=5)
+
+		if incluiPara:
+			para = tk.Entry(parent, width=40)
+			para.grid(row=rowDePara, column=5, pady=5)
+			if incluiBtn:
+				btn_para = tk.Button(parent, text = '...', bg='blue', fg='white')
+				btn_para['command'] = lambda arg1=para : self.openDirectory(arg1)
+				btn_para.grid(row=rowDePara, column=6, pady=5)
+
 
 	def adicionar_registro(self):
 		# Coletando os valores.
@@ -140,19 +257,43 @@ class Janela(tk.Frame):
 			# Removendo valor do treeview.
 			self.treeview.delete(item_selecionado)
 
-	def testeaskdirectory(self):
+	def openDirectory(self, entry, filetype = None):
 		#primeiro definimos as opções
-
 		opcoes = {}                 # as opções são definidas em um dicionário
-		#opcoes['defaultextension'] = '.txt'
-		#opcoes['filetypes'] = [('Todos arquivos', '.*'), ('arquivos texto', '.txt')]
+		if filetype != None:
+			opcoes['defaultextension'] = filetype
+			opcoes['filetypes'] = [('Todos arquivos', filetype)]
 		opcoes['initialdir'] = ''    # será o diretório atual
 		#opcoes['initialfile'] = '' #apresenta todos os arquivos no diretorio
 		opcoes['parent'] = self.root
-		opcoes['title'] = 'Diálogo que retorna o nome do diretório selecionado'
+		opcoes['title'] = 'Selecione'
 
 		#retorna o caminho completo  de um diretório
 
-		nomeDiretorio= fdlg.askdirectory(**opcoes)
+		if filetype == None:
+			nomeDiretorio = fdlg.askdirectory(**opcoes)
+		else:
+			nomeDiretorio = fdlg.askopenfilename(**opcoes)
+
+		if nomeDiretorio != None and len(nomeDiretorio) > 0:
+			entry.delete(0, tk.END)
+			entry.insert(0, nomeDiretorio)
 
 		print (nomeDiretorio)
+
+	def reset_cadastro(self):
+		for child in self.abaCadastro.children.values():
+			if child.widgetName == 'frame':
+				self.limpar_entry(child)
+
+			elif child.widgetName == 'entry':
+				child.delete(0, tk.END)
+		self.abasCadastro.select(0)
+
+	def limpar_entry(self, frame):
+		for child in frame.children.values():
+			if child.widgetName == 'frame' or child.widgetName == 'ttk::notebook':
+				self.limpar_entry(child)
+
+			elif child.widgetName == 'entry':
+				child.delete(0, tk.END)
