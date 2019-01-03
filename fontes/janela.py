@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Gera janela para cadastrar os ambientes"""
-import re
 import tkinter as tk
 import tkinter.ttk as tkk
 import tkinter.filedialog as fdlg
 from tkinter import messagebox
-from fontes.conectarDb import ConectarDB
+from fontes.mdAmbiente import mdAmbiente
+from fontes.meuEntry import meuEntry
 
 class Janela(tk.Frame):
 	"""Janela principal"""
@@ -17,6 +17,8 @@ class Janela(tk.Frame):
 
 		self.root = master
 		self.rowCadastro = 0
+		self.alterar = False
+		self.dadosCad = {}
 
 		# Coletando informações do monitor
 		largura = round(self.winfo_screenwidth() / 2)
@@ -30,7 +32,7 @@ class Janela(tk.Frame):
 		master.geometry(tamanho)
 
 		# Instanciando a conexão com o banco.
-		self.banco = ConectarDB()
+		self.mdAmbiente = mdAmbiente()
 
 		# Gerenciador de layout da janela principal.
 		self.pack()
@@ -57,8 +59,17 @@ class Janela(tk.Frame):
 			self.abasPrincipal.hide(1)
 			self.reset_cadastro()
 
-	def inclui_aba_cadastro(self, hide = True):
+	def inclui_aba_cadastro(self, hide = True, ID = '0'):
 		self.abasPrincipal.add(self.abaCadastro,text='Cadastro')
+		if ID == '0':
+			ID = self.mdAmbiente.consultar_proximo_id()
+			self.mdAmbiente.set_id(ID)
+			self.alterar = False
+		else:
+			self.mdAmbiente.load_registro(ID)
+			self.load_entry()
+			self.alterar = True
+
 		if hide:
 			self.abasPrincipal.hide(0)
 
@@ -68,6 +79,12 @@ class Janela(tk.Frame):
 		frame1 = tk.Frame(parent)
 		frame1.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
 
+		frame1R = tk.Frame(frame1)
+		frame1R.pack(side=tk.RIGHT)
+
+		frame1L = tk.Frame(frame1)
+		frame1L.pack(side=tk.LEFT)
+
 		frame2 = tk.Frame(parent)
 		frame2.pack(fill=tk.BOTH, expand=True)
 
@@ -75,41 +92,31 @@ class Janela(tk.Frame):
 		frame3.pack(side=tk.BOTTOM, padx=5)
 
 		# Labels.
-		label_documento = tk.Label(frame1, text='N° Documento')
-		label_documento.grid(row=0, column=0)
-
-		label_assunto = tk.Label(frame1, text='Assunto')
-		label_assunto.grid(row=0, column=1)
-
-		label_recebido = tk.Label(frame1, text='Data recebimento')
-		label_recebido.grid(row=0, column=2)
+		label_pesquisa = tk.Label(frame1L, text='Pesquisar')
+		label_pesquisa.grid(row=0, column=0)
 
 		# Entrada de texto.
-		self.entry_documento = tk.Entry(frame1)
-		self.entry_documento.grid(row=1, column=0)
+		self.pesquisa = meuEntry(frame1L, width=50)
+		self.pesquisa.bind('<Key>', self.pesquisa_grid)
+		self.pesquisa.grid(row=0, column=1, padx=5, pady=10)
 
-		self.entry_assunto = tk.Entry(frame1)
-		self.entry_assunto.grid(row=1, column=1, padx=10)
+		# Botão
+		button_alterar = tk.Button(frame1R, text='Alterar', bg='blue', fg='white')
+		button_alterar['command'] = self.alterar_registro
+		button_alterar.grid(row=0, column=0, padx=10, pady=10)
 
-		self.entry_data = tk.Entry(frame1)
-		self.entry_data.grid(row=1, column=2)
-
-		# Botão para adicionar um novo registro.
-		button_adicionar = tk.Button(frame1, text='Adicionar', bg='blue', fg='white')
-		# Método que é chamado quando o botão é clicado.
+		button_adicionar = tk.Button(frame1R, text='Adicionar', bg='green', fg='white')
 		button_adicionar['command'] = self.inclui_aba_cadastro
-		button_adicionar.grid(row=0, column=3, rowspan=2, padx=10)
+		button_adicionar.grid(row=0, column=1, padx=10, pady=10)
 
 		# Treeview.
-		self.treeview = tkk.Treeview(frame2, columns=('N° documento', 'Assunto', 'Data'))
-		self.treeview.heading('#0', text='ROWID')
-		self.treeview.heading('#1', text='N° documento')
-		self.treeview.heading('#2', text='Assunto')
-		self.treeview.heading('#3', text='Data')
+		self.treeview = tkk.Treeview(frame2, columns=('descricao'))
+		self.treeview.heading('#0', text='ID')
+		self.treeview.heading('#1', text='Descrição')
 
 		# Inserindo os dados do banco no treeview.
-		for row in self.banco.consultar_registros():
-			self.treeview.insert('', 'end', text=row[0], values=(row[1], row[2], row[3]))
+		for row in self.mdAmbiente.consultar_registros():
+			self.treeview.insert('', 'end', text=row[0], value=row[1].strip().replace(' ', '_') )
 
 		self.treeview.pack(fill=tk.BOTH, expand=True)
 
@@ -130,7 +137,9 @@ class Janela(tk.Frame):
 		frame3 = tk.Frame(parent)
 		frame3.pack(side=tk.RIGHT, padx=5)
 
-		self.add_de_x_para(parent=frame1, name='Descrição', incluiPara = False, incluiBtn = False)
+		self.add_origem(parent=frame1, name='Descrição', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_descricao(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_descricao()))
 
 		# Abas.
 		self.abasCadastro = tkk.Notebook(frame2)
@@ -154,7 +163,7 @@ class Janela(tk.Frame):
 		btn_cancelar.grid(row=rowBtns, column=1, pady=10, padx=20)
 
 		btn_salvar = tk.Button(frame3, text = 'Salvar', bg='green', fg='white')
-		btn_salvar['command'] = lambda arg1='Salvo' : print(arg1)
+		btn_salvar['command'] = self.adicionar_registro
 		btn_salvar.grid(row=rowBtns, column=2, pady=10, padx=20)
 
 	def inclui_widgets_De_Para(self, parent):
@@ -170,74 +179,115 @@ class Janela(tk.Frame):
 		label_para = tk.Label(frameDePara, text='Destino:')
 		label_para.grid(row=0, column=5)
 
-		self.add_de_x_para(parent=frameDePara, name='RPO', filetype='.rpo')
-		self.add_de_x_para(parent=frameDePara, name='Smart Client', filetype='.zip')
-		self.add_de_x_para(parent=frameDePara, name='Server', filetype='.zip')
-		self.add_de_x_para(parent=frameDePara, name='Includes', filetype='.zip')
+		self.add_origem(parent=frameDePara, name='RPO', filetype='.rpo',
+						command=lambda val : self.mdAmbiente.set_de_rpo(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_rpo()))
+		self.add_destino(parent=frameDePara, name='RPO', filetype='.rpo',
+						command=lambda val : self.mdAmbiente.set_para_rpo(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_rpo()))
+
+		self.add_origem(parent=frameDePara, name='Smart Client', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_de_smartClient(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_smartClient()))
+		self.add_destino(parent=frameDePara, name='Smart Client', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_para_smartClient(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_smartClient()))
+
+		self.add_origem(parent=frameDePara, name='Server', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_de_server(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_server()))
+		self.add_destino(parent=frameDePara, name='Server', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_para_server(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_server()))
+
+		self.add_origem(parent=frameDePara, name='Includes', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_de_includes(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_includes()))
+		self.add_destino(parent=frameDePara, name='Includes', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_para_includes(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_includes()))
 
 	def inclui_widgets_Banco(self, parent):
 		frameBanco = tk.Frame(parent)
 		frameBanco.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
-		self.add_de_x_para(parent=frameBanco, name='Bkp Banco', filetype='.bak', incluiPara = False)
-		self.add_de_x_para(parent=frameBanco, name='Servidor', incluiPara = False, incluiBtn = False)
-		self.add_de_x_para(parent=frameBanco, name='Nome Banco', incluiPara = False, incluiBtn = False)
-		self.add_de_x_para(parent=frameBanco, name='Usuário', incluiPara = False, incluiBtn = False)
-		self.add_de_x_para(parent=frameBanco, name='Senha', incluiPara = False, incluiBtn = False)
+		self.add_origem(parent=frameBanco, name='Bkp Banco', filetype='.bak',
+						command=lambda val : self.mdAmbiente.set_bd_bkpBanco(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_bd_bkpBanco()))
+		self.add_origem(parent=frameBanco, name='Servidor', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_bd_servidor(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_bd_servidor()))
+		self.add_origem(parent=frameBanco, name='Nome Banco', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_bd_nomeBanco(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_bd_nomeBanco()))
+		self.add_origem(parent=frameBanco, name='Usuario', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_bd_usuario(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_bd_usuario()))
+		self.add_origem(parent=frameBanco, name='Senha', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_bd_senha(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_bd_senha()))
 
 	def inclui_widgets_Fontes(self, parent):
 		frameFontes = tk.Frame(parent)
 		frameFontes.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
-		self.add_de_x_para(parent=frameFontes, name='Fontes', incluiPara = False)
-		self.add_de_x_para(parent=frameFontes, name='Patch', filetype='.ptm', incluiPara = False)
+		self.add_origem(parent=frameFontes, name='Fontes',
+						command=lambda val : self.mdAmbiente.set_fontes(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_fontes()))
+		self.add_origem(parent=frameFontes, name='Patch', filetype='.ptm',
+						command=lambda val : self.mdAmbiente.set_patch(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_patch()))
 
 	def getRowCad(self):
 		self.rowCadastro += 1
 		return self.rowCadastro
 
-	def add_de_x_para(self, parent, name, filetype = None, incluiPara = True, incluiBtn = True):
+	def digitando(self, event, command = None):
+		if command != None:
+			command(event.widget.get())
+
+	def add_origem(self, parent, name, filetype = None, incluiPara = True, incluiBtn = True, command = None, load = None):
 		rowDePara = self.getRowCad()
 
 		label = tk.Label(parent, text=name)
 		label.grid(row=rowDePara, column=1)
 
-		de = tk.Entry(parent, width=40)
+		de = meuEntry(parent, width=40)
+		de.set_tag(load)
 		de.grid(row=rowDePara, column=2, pady=5)
+		de.bind('<KeyRelease>', lambda e, arg1=command : self.digitando(event=e, command=arg1))
 		if incluiBtn:
 			btn_de = tk.Button(parent, text = '...', bg='blue', fg='white')
-			btn_de['command'] = lambda arg1=de, arg2=filetype : self.openDirectory(arg1, arg2)
+			btn_de['command'] = lambda arg1=de, arg2=filetype, arg3=command : self.openDirectory(arg1, arg2, arg3)
 			btn_de.grid(row=rowDePara, column=3, pady=5)
 
-		if incluiPara:
-			para = tk.Entry(parent, width=40)
-			para.grid(row=rowDePara, column=5, pady=5)
-			if incluiBtn:
-				btn_para = tk.Button(parent, text = '...', bg='blue', fg='white')
-				btn_para['command'] = lambda arg1=para : self.openDirectory(arg1)
-				btn_para.grid(row=rowDePara, column=6, pady=5)
+	def add_destino(self, parent, name, filetype = None, incluiBtn = True, command = None, load = None):
+		rowDePara = self.rowCadastro
 
+		para = meuEntry(parent, width=40)
+		para.set_tag(load)
+		para.grid(row=rowDePara, column=5, pady=5)
+		para.bind('<KeyRelease>', lambda e, arg1=command : self.digitando(event=e, command=arg1))
+		if incluiBtn:
+			btn_para = tk.Button(parent, text = '...', bg='blue', fg='white')
+			btn_para['command'] = lambda arg1=para, arg2=filetype, arg3=command : self.openDirectory(arg1, arg2, arg3)
+			btn_para.grid(row=rowDePara, column=6, pady=5)
 
 	def adicionar_registro(self):
-		# Coletando os valores.
-		documento = self.entry_documento.get()
-		assunto = self.entry_assunto.get()
-		data = self.entry_data.get()
-
-		# Validação simples (utilizar datetime deve ser melhor para validar).
-		validar_data = re.search(r'(..)/(..)/(....)', data)
-
 		# Se a data digitada passar na validação
-		if validar_data:
+		if isNotEmpty(self.mdAmbiente.get_descricao()):
 			# Dados digitando são inseridos no banco de dados
-			self.banco.inserir_registro(ndocumento=documento, assunto=assunto, data=data)
+			if self.mdAmbiente.inserir_registro():
+				# Adicionando os novos dados no treeview.
+				if self.alterar:
+					self.treeview.item(self.item_selecionado, text=self.mdAmbiente.get_id(), value=self.mdAmbiente.get_descricao().strip().replace(' ', '_'))
+				else:
+					self.treeview.insert('', 'end', text=self.mdAmbiente.get_id(), value=self.mdAmbiente.get_descricao().strip().replace(' ', '_'))
+				self.reset_cadastro()
+				messagebox.showinfo('Concluído', 'Ambiente foi salvo.')
+			else:
+				messagebox.showerror('Erro', 'Houve um erro ao tentar incluir o ambiente.')
 
-			# Coletando a ultima rowid que foi inserida no banco.
-			rowid = self.banco.consultar_ultimo_rowid()[0]
-
-			# Adicionando os novos dados no treeview.
-			self.treeview.insert('', 'end', text=rowid, values=(documento, assunto, data))
 		else:
-			# Caso a data não passe na validação é exibido um alerta.
-			messagebox.showerror('Erro', 'Padrão de data incorreto, utilize dd/mm/yyyy')
+			messagebox.showerror('Erro', 'É obrigatório informar a descrição do ambiente.')
 
 	def excluir_registro(self):
 		# Verificando se algum item está selecionado.
@@ -248,16 +298,29 @@ class Janela(tk.Frame):
 			item_selecionado = self.treeview.focus()
 
 			# Coletando os dados do item selecionado (dicionário).
-			rowid = self.treeview.item(item_selecionado)
+			id = self.treeview.item(item_selecionado)
 
-			# Removendo o item com base no valor do rowid (argumento text do treeview).
+			# Removendo o item com base no valor do id (argumento text do treeview).
 			# Removendo valor da tabela.
-			self.banco.remover_registro(rowid['text'])
+			retRemove = self.mdAmbiente.remover_registro(id['text'])
 
-			# Removendo valor do treeview.
-			self.treeview.delete(item_selecionado)
+			if retRemove['removido']:
+				# Removendo valor do treeview.
+				self.treeview.delete(item_selecionado)
+			else:
+				messagebox.showerror('Erro', retRemove['msgErro'])
 
-	def openDirectory(self, entry, filetype = None):
+	def alterar_registro(self):
+		# Verificando se algum item está selecionado.
+		if not self.treeview.focus():
+			messagebox.showerror('Erro', 'Nenhum item selecionado')
+		else:
+			self.item_selecionado = self.treeview.focus()
+			id = self.treeview.item(self.item_selecionado)
+			self.inclui_aba_cadastro(ID = id['text'])
+
+
+	def openDirectory(self, entry, filetype = None, command = None):
 		#primeiro definimos as opções
 		opcoes = {}                 # as opções são definidas em um dicionário
 		if filetype != None:
@@ -278,22 +341,50 @@ class Janela(tk.Frame):
 		if nomeDiretorio != None and len(nomeDiretorio) > 0:
 			entry.delete(0, tk.END)
 			entry.insert(0, nomeDiretorio)
+			command(entry.get())
 
 		print (nomeDiretorio)
 
 	def reset_cadastro(self):
-		for child in self.abaCadastro.children.values():
-			if child.widgetName == 'frame':
-				self.limpar_entry(child)
-
-			elif child.widgetName == 'entry':
-				child.delete(0, tk.END)
+		self.mdAmbiente.reset_values()
+		self.load_entry()
 		self.abasCadastro.select(0)
 
-	def limpar_entry(self, frame):
+	def load_entry(self, frame = None):
+		if frame == None:
+			frame = self.abaCadastro
+
 		for child in frame.children.values():
 			if child.widgetName == 'frame' or child.widgetName == 'ttk::notebook':
-				self.limpar_entry(child)
+				self.load_entry(child)
 
 			elif child.widgetName == 'entry':
-				child.delete(0, tk.END)
+				load = child.get_tag()
+				load(child)
+
+	def pesquisa_grid(self, event, item = ''):
+		achou = True
+		if event.keycode == 13: #enter
+			achou = False
+			pesquisa = event.widget.get().strip().replace(' ', '_')
+			children = self.treeview.get_children(item)
+			for child in children:
+				values = self.treeview.item(child, 'value')
+				for text in values:
+					achou = False
+					if pesquisa.upper() in text.upper():
+						self.treeview.selection_set(child)
+						self.treeview.focus(child)
+						achou = True
+				if achou:
+					break
+				else:
+					achou = self.pesquisa_grid(event, child)
+		return achou
+
+def isNotEmpty(s):
+	return bool(s and s.strip())
+
+def atualizaEntry(entry, val):
+	entry.delete(0,tk.END)
+	entry.insert(0,val)
