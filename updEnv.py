@@ -18,7 +18,6 @@ for param in sys.argv:
 
 if execConsole:
 	ExecConsole()
-	input()
 
 else:
 	root = tk.Tk()

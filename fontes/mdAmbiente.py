@@ -131,6 +131,16 @@ class mdAmbiente:
 			removido = True
 		return {'removido':removido, 'msgErro':msgErro}
 
+	def isDadosBd(self):
+		gerarBkpBd = True
+		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_bkpBanco())
+		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_nomeBanco())
+		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_senha())
+		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_servidor())
+		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_usuario())
+
+		return gerarBkpBd
+
 	def set_id(self, val=''):
 		self.id = val
 
@@ -232,3 +242,6 @@ class mdAmbiente:
 
 	def get_patch(self):
 		return self.patch
+
+def isNotEmpty(s):
+	return bool(s and s.strip())
