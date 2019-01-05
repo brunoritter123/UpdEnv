@@ -182,30 +182,37 @@ class Janela(tk.Frame):
 		self.add_origem(parent=frameDePara, name='RPO', filetype='.rpo',
 						command=lambda val : self.mdAmbiente.set_de_rpo(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_rpo()))
-		self.add_destino(parent=frameDePara, name='RPO', filetype='.rpo',
+		self.add_destino(parent=frameDePara, name='RPO',
 						command=lambda val : self.mdAmbiente.set_para_rpo(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_rpo()))
 
 		self.add_origem(parent=frameDePara, name='Smart Client', filetype='.zip',
 						command=lambda val : self.mdAmbiente.set_de_smartClient(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_smartClient()))
-		self.add_destino(parent=frameDePara, name='Smart Client', filetype='.zip',
+		self.add_destino(parent=frameDePara, name='Smart Client',
 						command=lambda val : self.mdAmbiente.set_para_smartClient(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_smartClient()))
 
 		self.add_origem(parent=frameDePara, name='Server', filetype='.zip',
 						command=lambda val : self.mdAmbiente.set_de_server(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_server()))
-		self.add_destino(parent=frameDePara, name='Server', filetype='.zip',
+		self.add_destino(parent=frameDePara, name='Server',
 						command=lambda val : self.mdAmbiente.set_para_server(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_server()))
 
 		self.add_origem(parent=frameDePara, name='Includes', filetype='.zip',
 						command=lambda val : self.mdAmbiente.set_de_includes(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_includes()))
-		self.add_destino(parent=frameDePara, name='Includes', filetype='.zip',
+		self.add_destino(parent=frameDePara, name='Includes',
 						command=lambda val : self.mdAmbiente.set_para_includes(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_includes()))
+
+		self.add_origem(parent=frameDePara, name='DbAccess', filetype='.zip',
+						command=lambda val : self.mdAmbiente.set_de_dbAccess(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_de_dbAccess()))
+		self.add_destino(parent=frameDePara, name='DbAccess',
+						command=lambda val : self.mdAmbiente.set_para_dbAccess(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_dbAccess()))
 
 	def inclui_widgets_Banco(self, parent):
 		frameBanco = tk.Frame(parent)
@@ -259,7 +266,7 @@ class Janela(tk.Frame):
 			btn_de['command'] = lambda arg1=de, arg2=filetype, arg3=command : self.openDirectory(arg1, arg2, arg3)
 			btn_de.grid(row=rowDePara, column=3, pady=5)
 
-	def add_destino(self, parent, name, filetype = None, incluiBtn = True, command = None, load = None):
+	def add_destino(self, parent, name, incluiBtn = True, command = None, load = None):
 		rowDePara = self.rowCadastro
 
 		para = meuEntry(parent, width=40)
@@ -268,14 +275,15 @@ class Janela(tk.Frame):
 		para.bind('<KeyRelease>', lambda e, arg1=command : self.digitando(event=e, command=arg1))
 		if incluiBtn:
 			btn_para = tk.Button(parent, text = '...', bg='blue', fg='white')
-			btn_para['command'] = lambda arg1=para, arg2=filetype, arg3=command : self.openDirectory(arg1, arg2, arg3)
+			btn_para['command'] = lambda arg1=para, arg2=None, arg3=command : self.openDirectory(arg1, arg2, arg3)
 			btn_para.grid(row=rowDePara, column=6, pady=5)
 
 	def adicionar_registro(self):
 		# Se a data digitada passar na validação
 		if isNotEmpty(self.mdAmbiente.get_descricao()):
 			# Dados digitando são inseridos no banco de dados
-			if self.mdAmbiente.inserir_registro():
+			retInsert = self.mdAmbiente.inserir_registro()
+			if retInsert['inseriu']:
 				# Adicionando os novos dados no treeview.
 				if self.alterar:
 					self.treeview.item(self.item_selecionado, text=self.mdAmbiente.get_id(), value=self.mdAmbiente.get_descricao().strip().replace(' ', '_'))
@@ -284,7 +292,7 @@ class Janela(tk.Frame):
 				self.reset_cadastro()
 				messagebox.showinfo('Concluído', 'Ambiente foi salvo.')
 			else:
-				messagebox.showerror('Erro', 'Houve um erro ao tentar incluir o ambiente.')
+				messagebox.showerror('Erro', retInsert['msgErro'])
 
 		else:
 			messagebox.showerror('Erro', 'É obrigatório informar a descrição do ambiente.')

@@ -28,6 +28,8 @@ class mdAmbiente:
 		self.set_bd_senha()
 		self.set_fontes()
 		self.set_patch()
+		self.set_de_dbAccess()
+		self.set_para_dbAccess()
 
 	def criar_tabela(self):
 		try:
@@ -48,12 +50,15 @@ class mdAmbiente:
 				BD_USUARIO TEXT,
 				BD_SENHA TEXT,
 				FONTES TEXT,
-				PATCH TEXT)''')
+				PATCH TEXT,
+				DE_DBACCESS TEXT,
+				PARA_DBACCESS TEXT)''')
 		except Exception as e:
 			print('[x] Falha ao criar tabela: %s [x]' % e)
 
 	def inserir_registro(self):
 		inseriu = False
+		msgErro = ""
 		try:
 			self.cur.execute(
 				f'''INSERT OR REPLACE INTO AMBIENTES VALUES ( '{self.get_id()}'
@@ -72,16 +77,20 @@ class mdAmbiente:
 															 , '{self.get_bd_usuario()}'
 															 , '{self.get_bd_senha()}'
 															 , '{self.get_fontes()}'
-															 , '{self.get_patch()}')''')
+															 , '{self.get_patch()}'
+															 , '{self.get_de_dbAccess()}'
+															 , '{self.get_para_dbAccess()}')''')
 		except Exception as e:
-			print('\n[x] Falha ao inserir registro [x]\n')
-			print('[x] Revertendo operação (rollback) %s [x]\n' % e)
+			msgErro = 'Falha ao inserir registro\n'
+			msgErro += 'Detalhes: '
+			for erro in e.args:
+				msgErro += erro+'\n'
 			self.con.rollback()
 			inseriu = False
 		else:
 			self.con.commit()
 			inseriu = True
-		return inseriu
+		return {"inseriu":inseriu, "msgErro": msgErro}
 
 	def consultar_registros(self):
 		return self.cur.execute('SELECT ID, DESCRICAO FROM AMBIENTES ORDER BY ID').fetchall()
@@ -105,6 +114,8 @@ class mdAmbiente:
 		self.set_bd_senha(item[14])
 		self.set_fontes(item[15])
 		self.set_patch(item[16])
+		self.set_de_dbAccess(item[17])
+		self.set_para_dbAccess(item[18])
 
 	def consultar_ultimo_id(self):
 		ultimoID = self.cur.execute('SELECT MAX(id) FROM AMBIENTES').fetchone()[0]
@@ -192,6 +203,12 @@ class mdAmbiente:
 	def set_patch(self, val=''):
 		self.patch = val
 
+	def set_de_dbAccess(self, val=''):
+		self.de_dbAccess = val
+
+	def set_para_dbAccess(self, val=''):
+		self.para_dbAccess = val
+
 	def get_id(self):
 		return self.id
 
@@ -242,6 +259,12 @@ class mdAmbiente:
 
 	def get_patch(self):
 		return self.patch
+
+	def get_de_dbAccess(self):
+		return self.de_dbAccess
+
+	def get_para_dbAccess(self):
+		return self.para_dbAccess
 
 def isNotEmpty(s):
 	return bool(s and s.strip())
