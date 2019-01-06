@@ -4,11 +4,14 @@ from fontes.mdAmbiente import mdAmbiente
 from fontes.log import Log
 import pyodbc
 import os
+import shutil
 
 class ExecConsole:
 	def __init__(self):
 		self.log = Log()
+		self.itens = 0
 		self.mdAmbiente = mdAmbiente()
+		self.deParaTemp = [{'pathTemp': '' , 'pathBd': ''}]
 		pathTemp = './temp'
 		if not os.path.exists(pathTemp):
 			os.mkdir(pathTemp)
@@ -19,7 +22,34 @@ class ExecConsole:
 			self.restaurar_bkp_bd()
 
 	def transferindoArquivos(self):
-		pass
+		de_rpo = self.mdAmbiente.get_de_rpo()
+		if de_rpo.find('/') >= 0:
+			nameRpo = de_rpo.rsplit('/', 1)[1]
+		else:
+			nameRpo = de_rpo.rsplit('\\', 1)[1]
+
+		self.enviarTemp(de_rpo, nameRpo)
+
+	def enviarTemp(self, pathDb, nameFile):
+		pathTemp = ''
+		for dic in self.deParaTemp:
+			if dic['pathBd'] == pathDb:
+				pathTemp = dic['pathTemp']
+				break
+
+		if isEmpty(pathTemp):
+			self.itens += 1
+			pathTemp = f'./temp/{str(self.itens)}'
+			if not os.path.exists(pathTemp):
+				os.mkdir(pathTemp)
+
+			if not isEmpty(nameFile):
+				pathTemp += f'/{nameFile}'
+				shutil.copyfile(pathDb, pathTemp)
+			else:
+				shutil.copytree(pathDb, pathTemp)
+
+			self.deParaTemp.append({'pathTemp': pathTemp , 'pathBd': pathDb})
 
 	def restaurar_bkp_bd(self):
 		if self.mdAmbiente.isDadosBd():
@@ -46,3 +76,6 @@ class ExecConsole:
 
 			if conn != None:
 				conn.close()
+
+def isEmpty(s):
+	return not bool(s and s.strip())
