@@ -40,6 +40,7 @@ class Janela(tk.Frame):
 		# Criando os widgets da interface.
 		self.criar_widgets(master)
 
+
 	def criar_widgets(self, master):
 		# Abas.
 		self.abasPrincipal = tkk.Notebook(master)
@@ -59,6 +60,7 @@ class Janela(tk.Frame):
 			self.abasPrincipal.hide(1)
 			self.reset_cadastro()
 
+
 	def inclui_aba_cadastro(self, hide = True, ID = '0'):
 		self.abasPrincipal.add(self.abaCadastro,text='Cadastro')
 		if ID == '0':
@@ -74,7 +76,6 @@ class Janela(tk.Frame):
 			self.abasPrincipal.hide(0)
 
 	def inclui_widgets_consulta(self, parent):
-
 		# Containers.
 		frame1 = tk.Frame(parent)
 		frame1.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
@@ -126,6 +127,7 @@ class Janela(tk.Frame):
 		button_excluir['command'] = self.excluir_registro
 		button_excluir.pack(pady=10)
 
+
 	def inclui_widgets_cadastro(self, parent):
 		# Containers.
 		frame1 = tk.Frame(parent)
@@ -146,15 +148,21 @@ class Janela(tk.Frame):
 		abaDePara = tk.Frame(self.abasCadastro)
 		abaBanco = tk.Frame(self.abasCadastro)
 		abaFontes = tk.Frame(self.abasCadastro)
+		abaServico = tk.Frame(self.abasCadastro)
+		abaHelp = tk.Frame(self.abasCadastro)
 
 		self.abasCadastro.add(abaDePara, text='Ambiente')
 		self.abasCadastro.add(abaBanco, text='Config. Banco')
 		self.abasCadastro.add(abaFontes, text='Fontes')
+		self.abasCadastro.add(abaServico, text='Serviços')
+		self.abasCadastro.add(abaHelp, text='Ajuda')
 		self.abasCadastro.pack(fill=tk.BOTH, expand=True)
 
 		self.inclui_widgets_De_Para(abaDePara)
 		self.inclui_widgets_Banco(abaBanco)
 		self.inclui_widgets_Fontes(abaFontes)
+		self.inclui_widgets_Servico(abaServico)
+		self.inclui_widgets_Help(abaHelp)
 
 		rowBtns = self.getRowCad()
 
@@ -165,6 +173,7 @@ class Janela(tk.Frame):
 		btn_salvar = tk.Button(frame3, text = 'Salvar', bg='green', fg='white')
 		btn_salvar['command'] = self.adicionar_registro
 		btn_salvar.grid(row=rowBtns, column=2, pady=10, padx=20)
+
 
 	def inclui_widgets_De_Para(self, parent):
 		frameDePara = tk.Frame(parent)
@@ -214,6 +223,7 @@ class Janela(tk.Frame):
 						command=lambda val : self.mdAmbiente.set_para_dbAccess(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_para_dbAccess()))
 
+
 	def inclui_widgets_Banco(self, parent):
 		frameBanco = tk.Frame(parent)
 		frameBanco.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
@@ -233,6 +243,7 @@ class Janela(tk.Frame):
 						command=lambda val : self.mdAmbiente.set_bd_senha(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_bd_senha()))
 
+
 	def inclui_widgets_Fontes(self, parent):
 		frameFontes = tk.Frame(parent)
 		frameFontes.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
@@ -243,13 +254,58 @@ class Janela(tk.Frame):
 						command=lambda val : self.mdAmbiente.set_patch(val),
 						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_patch()))
 
+
+	def inclui_widgets_Servico(self, parent):
+		frameServico = tk.Frame(parent)
+		frameServico.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
+
+		label = tk.Label(frameServico, text='Nome dos serviços para parar enquanto é feita a atualização do ambiente.')
+		label.grid(row=1, column=1, columnspan=20, pady=10)
+
+		self.add_origem(parent=frameServico, name='DbAccess', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_sv_dbAccess(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_sv_dbAccess()))
+		self.add_origem(parent=frameServico, name='Server', incluiBtn = False,
+						command=lambda val : self.mdAmbiente.set_sv_server(val),
+						load=lambda entry : atualizaEntry(entry,self.mdAmbiente.get_sv_serve()))
+
+	def inclui_widgets_Help(self, parent):
+		frameHelp = tk.Frame(parent)
+		frameHelp.pack(side=tk.LEFT, fill=tk.BOTH, padx=5, pady=5)
+
+		label = tk.Label(frameHelp, text="Utilizar chaves {} para identificar a utilização de uma função, abaixo estão as funções disponíveis.")
+		label.grid(row=1, column=1, pady=10)
+
+		label2 = tk.Label(frameHelp, text="RegEx('') - Utilizado para passar uma expressão regular, exemplo abaixo.")
+		label2.grid(row=2, column=1, pady=10)
+
+		ex2 = meuEntry(frameHelp, width=100)
+		ex2.insert(0, "{RegEx('appserver-.*-winx64.zip')}")
+		ex2.grid(row=3, column=1, padx=5, pady=10)
+
+		label3 = tk.Label(frameHelp, text="Date('', 0) - Retorna o dia atual no formato passado no parâmetro 1 Y = Ano, M = Mês e D = Dia.")
+		label3.grid(row=4, column=1, pady=10)
+
+		label3p1 = tk.Label(frameHelp, text="\tPrimeiro parâmetro formato: Y = Ano, M = Mês e D = Dia.")
+		label3p1.grid(row=5, column=1, pady=10)
+
+		label3p2 = tk.Label(frameHelp, text="\tSegundo parâmetro somaDia: passar um número negativo para dininuir dias ou positivo para aumentar dias (0 = Dia Atual).")
+		label3p2.grid(row=6, column=1, pady=10)
+
+		ex3 = meuEntry(frameHelp, width=100)
+		ex3.insert(0, "{Date('YMD', -1)} >> Retorna o dia anterior ex: 20181231")
+		ex3.grid(row=7, column=1, pady=10)
+
+
 	def getRowCad(self):
 		self.rowCadastro += 1
 		return self.rowCadastro
 
+
 	def digitando(self, event, command = None):
 		if command != None:
 			command(event.widget.get())
+
 
 	def add_origem(self, parent, name, filetype = None, incluiPara = True, incluiBtn = True, command = None, load = None):
 		rowDePara = self.getRowCad()
@@ -355,8 +411,12 @@ class Janela(tk.Frame):
 
 	def reset_cadastro(self):
 		self.mdAmbiente.reset_values()
+		ID = self.mdAmbiente.consultar_proximo_id()
+		self.mdAmbiente.set_id(ID)
+		self.alterar = False
 		self.load_entry()
 		self.abasCadastro.select(0)
+
 
 	def load_entry(self, frame = None):
 		if frame == None:
@@ -368,7 +428,8 @@ class Janela(tk.Frame):
 
 			elif child.widgetName == 'entry':
 				load = child.get_tag()
-				load(child)
+				if load != None:
+					load(child)
 
 	def pesquisa_grid(self, event, item = ''):
 		achou = True
@@ -395,4 +456,5 @@ def isNotEmpty(s):
 
 def atualizaEntry(entry, val):
 	entry.delete(0,tk.END)
-	entry.insert(0,val)
+	if type(val) is str:
+		entry.insert(0,val)

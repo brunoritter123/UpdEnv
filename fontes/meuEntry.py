@@ -5,4 +5,7 @@ class meuEntry(tk.Entry):
 		self.tag = tag
 
 	def get_tag(self):
-		return self.tag
+		try:
+			return self.tag
+		except Exception:
+			return None

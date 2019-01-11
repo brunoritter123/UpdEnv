@@ -30,6 +30,8 @@ class mdAmbiente:
 		self.set_patch()
 		self.set_de_dbAccess()
 		self.set_para_dbAccess()
+		self.set_sv_dbAccess()
+		self.set_sv_server()
 
 	def criar_tabela(self):
 		try:
@@ -52,7 +54,9 @@ class mdAmbiente:
 				FONTES TEXT,
 				PATCH TEXT,
 				DE_DBACCESS TEXT,
-				PARA_DBACCESS TEXT)''')
+				PARA_DBACCESS TEXT,
+				SV_DBACCESS TEXT,
+				SV_SERVER TEXT)''')
 		except Exception as e:
 			print('[x] Falha ao criar tabela: %s [x]' % e)
 
@@ -79,7 +83,9 @@ class mdAmbiente:
 															 , '{self.get_fontes()}'
 															 , '{self.get_patch()}'
 															 , '{self.get_de_dbAccess()}'
-															 , '{self.get_para_dbAccess()}')''')
+															 , '{self.get_para_dbAccess()}'
+															 , '{self.get_sv_dbAccess()}'
+															 , '{self.get_sv_serve()}')''')
 		except Exception as e:
 			msgErro = 'Falha ao inserir registro\n'
 			msgErro += 'Detalhes: '
@@ -116,6 +122,8 @@ class mdAmbiente:
 		self.set_patch(item[16])
 		self.set_de_dbAccess(item[17])
 		self.set_para_dbAccess(item[18])
+		self.set_sv_dbAccess(item[19])
+		self.set_sv_server(item[20])
 
 	def consultar_ultimo_id(self):
 		ultimoID = self.cur.execute('SELECT MAX(id) FROM AMBIENTES').fetchone()[0]
@@ -149,8 +157,10 @@ class mdAmbiente:
 		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_senha())
 		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_servidor())
 		gerarBkpBd = gerarBkpBd and isNotEmpty(self.get_bd_usuario())
-
 		return gerarBkpBd
+
+	def isDeParaRpo(self):
+		return isNotEmpty(self.get_de_rpo()) and isNotEmpty(self.get_para_rpo())
 
 	def set_id(self, val=''):
 		self.id = val
@@ -209,62 +219,74 @@ class mdAmbiente:
 	def set_para_dbAccess(self, val=''):
 		self.para_dbAccess = val
 
+	def set_sv_dbAccess(self, val=''):
+		self.sv_dbAccess = val
+
+	def set_sv_server(self, val=''):
+		self.sv_serve = val
+
 	def get_id(self):
-		return self.id
+		return self.id.strip()
 
 	def get_descricao(self):
-		return self.descricao
+		return self.descricao.strip()
 
 	def get_de_rpo(self):
-		return self.de_rpo
+		return self.de_rpo.strip()
 
 	def get_de_smartClient(self):
-		return self.de_smartClient
+		return self.de_smartClient.strip()
 
 	def get_de_server(self):
-		return self.de_server
+		return self.de_server.strip()
 
 	def get_de_includes(self):
-		return self.de_includes
+		return self.de_includes.strip()
 
 	def get_para_rpo(self):
-		return self.para_rpo
+		return self.para_rpo.strip()
 
 	def get_para_smartClient(self):
-		return self.para_smartClient
+		return self.para_smartClient.strip()
 
 	def get_para_server(self):
-		return self.para_server
+		return self.para_server.strip()
 
 	def get_para_includes(self):
-		return self.para_includes
+		return self.para_includes.strip()
 
 	def get_bd_bkpBanco(self):
-		return self.bd_bkpBanco
+		return self.bd_bkpBanco.strip()
 
 	def get_bd_servidor(self):
-		return self.bd_servidor
+		return self.bd_servidor.strip()
 
 	def get_bd_nomeBanco(self):
-		return self.bd_nomeBanco
+		return self.bd_nomeBanco.strip()
 
 	def get_bd_usuario(self):
-		return self.bd_usuario
+		return self.bd_usuario.strip()
 
 	def get_bd_senha(self):
-		return self.bd_senha
+		return self.bd_senha.strip()
 
 	def get_fontes(self):
-		return self.fontes
+		return self.fontes.strip()
 
 	def get_patch(self):
-		return self.patch
+		return self.patch.strip()
 
 	def get_de_dbAccess(self):
-		return self.de_dbAccess
+		return self.de_dbAccess.strip()
 
 	def get_para_dbAccess(self):
-		return self.para_dbAccess
+		return self.para_dbAccess.strip()
+
+	def get_sv_dbAccess(self):
+		return self.sv_dbAccess.strip()
+
+	def get_sv_serve(self):
+		return self.sv_serve.strip()
 
 def isNotEmpty(s):
 	return bool(s and s.strip())
