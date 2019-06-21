@@ -7,6 +7,8 @@ import tkinter.filedialog as fdlg
 from tkinter import messagebox
 from fontes.mdAmbiente import mdAmbiente
 from fontes.meuEntry import meuEntry
+from fontes.execConsole import ExecConsole
+from fontes.donwload import Donwload
 
 class Janela(tk.Frame):
 	"""Janela principal"""
@@ -112,6 +114,7 @@ class Janela(tk.Frame):
 
 		# Treeview.
 		self.treeview = tkk.Treeview(frame2, columns=('descricao'))
+		self.treeview.bind("<Double-1>", self.treeOnDoubleClick)
 		self.treeview.heading('#0', text='ID')
 		self.treeview.heading('#1', text='Descrição')
 
@@ -126,6 +129,12 @@ class Janela(tk.Frame):
 		# Método que é chamado quando o botão é clicado.
 		button_excluir['command'] = self.excluir_registro
 		button_excluir.pack(pady=10)
+
+
+	def treeOnDoubleClick(self, event):
+		'''item = self.treeview.identify('item',event.x,event.y)'''
+		'''ExecConsole(self.treeview.item(item,"text"))'''
+		Donwload('https://arte.engpro.totvs.com.br/protheus/padrao/latest/repositorio/lobo_guara/tttp120.rpo')
 
 
 	def inclui_widgets_cadastro(self, parent):

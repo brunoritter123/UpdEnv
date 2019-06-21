@@ -283,10 +283,10 @@ class mdAmbiente:
 		return self.para_dbAccess.strip()
 
 	def get_sv_dbAccess(self):
-		return self.sv_dbAccess.strip()
+		return self.sv_dbAccess.strip().lower()
 
 	def get_sv_serve(self):
-		return self.sv_serve.strip()
+		return self.sv_serve.strip().lower()
 
 def isNotEmpty(s):
 	return bool(s and s.strip())

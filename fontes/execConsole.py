@@ -2,23 +2,20 @@
 # -*- coding: utf-8 -*-
 from fontes.mdAmbiente import mdAmbiente
 from fontes.log import Log
+import win32serviceutil
 import pyodbc
 import os
 import shutil
 import zipfile
-import subprocess
 
 class ExecConsole:
-	def __init__(self):
+	def __init__(self, idExec = ''):
 		self.log = Log()
 		self.itens = 0
 		self.mdAmbiente = mdAmbiente()
 		self.deParaTemp = [{'pathTemp': '' , 'pathBd': ''}]
 		self.pathTemp = './temp'
 		self.ambienteAual = ''
-
-		print("""   >Parando serviços""")
-		self.pararServicos()
 
 		print("""   >Delatando pasta temp""")
 		self.deletarPastaTemp()
@@ -29,17 +26,17 @@ class ExecConsole:
 
 		for row in self.mdAmbiente.consultar_registros():
 			self.mdAmbiente.load_registro(row[0])
-			self.ambienteAual = f"Id='{self.mdAmbiente.get_id()}' - Descrição= '{self.mdAmbiente.get_descricao()}'."
-			print(f"""   >Carregado ambiente - {self.ambienteAual}""")
-			self.transferindoArquivos()
-			self.restaurar_bkp_bd()
+
+			if idExec == self.mdAmbiente.get_id() or idExec == '':
+				self.ambienteAual = f"Id='{self.mdAmbiente.get_id()}' - Descrição= '{self.mdAmbiente.get_descricao()}'."
+				print(f"""   >Carregado ambiente - {self.ambienteAual}""")
+				self.pararServicos()
+				self.transferindoArquivos()
+				self.restaurar_bkp_bd()
+				self.iniciarServicos()
 
 		print("""   >Delatando pasta temp""")
 		self.deletarPastaTemp()
-
-		print("""   >Iniciando serviços""")
-		self.iniciarServicos()
-
 
 	def deletarPastaTemp(self):
 		try:
@@ -57,7 +54,7 @@ class ExecConsole:
 		try:
 			if not isEmpty(sv_dbAccess):
 				print(f"""      >Parando o serviço - {sv_dbAccess}""")
-				subprocess.run(['sc', 'stop', sv_dbAccess])
+				win32serviceutil.StopService(sv_dbAccess)
 		except Exception as e:
 			erro = f"Erro ao tentar parar o serviço '{sv_dbAccess}'."
 			self.log.write(self.ambienteAual, erro, e)
@@ -65,7 +62,7 @@ class ExecConsole:
 		try:
 			if not isEmpty(sv_serve):
 				print(f"""      >Parando o serviço - {sv_serve}""")
-				subprocess.run(['sc', 'stop', sv_serve])
+				win32serviceutil.StopService(sv_serve)
 		except Exception as e:
 			erro = f"Erro ao tentar parar o serviço '{sv_serve}'."
 			self.log.write(self.ambienteAual, erro, e)
@@ -78,7 +75,7 @@ class ExecConsole:
 		try:
 			if not isEmpty(sv_dbAccess):
 				print(f"""      >Iniciando o serviço - {sv_dbAccess}""")
-				subprocess.run(['sc', 'start', sv_dbAccess])
+				win32serviceutil.StartService(sv_dbAccess)
 		except Exception as e:
 			erro = f"Erro ao tentar iniciar o serviço '{sv_dbAccess}'."
 			self.log.write(self.ambienteAual, erro, e)
@@ -86,7 +83,7 @@ class ExecConsole:
 		try:
 			if not isEmpty(sv_serve):
 				print(f"""      >Iniciando o serviço - {sv_serve}""")
-				subprocess.run(['sc', 'start', sv_serve])
+				win32serviceutil.StartService(sv_serve)
 		except Exception as e:
 			erro = f"Erro ao tentar iniciar o serviço '{sv_serve}'."
 			self.log.write(self.ambienteAual, erro, e)
@@ -223,7 +220,6 @@ class ExecConsole:
 
 				if os.path.isfile(de_arquivo):
 					if os.path.exists(para_arquivo):
-						#subprocess.call(f'attrib -r +s drive:{para_arquivo}')
 						os.remove(para_arquivo)
 
 					shutil.copyfile(de_arquivo, para_arquivo)

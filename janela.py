@@ -99,6 +99,7 @@ class Janela(tk.Frame):
 
 		# Treeview.
 		self.treeview = tkk.Treeview(frame2, columns=('N° documento', 'Assunto', 'Data'))
+		self.treeview.bind("<Double-1>", self.treeOnDoubleClick)
 		self.treeview.heading('#0', text='ROWID')
 		self.treeview.heading('#1', text='N° documento')
 		self.treeview.heading('#2', text='Assunto')
@@ -115,6 +116,21 @@ class Janela(tk.Frame):
 		# Método que é chamado quando o botão é clicado.
 		button_excluir['command'] = self.excluir_registro
 		button_excluir.pack(pady=10)
+
+
+	def treeOnDoubleClick(self, event):
+		item = self.treeview.identify('item',event.x,event.y)
+		print("you clicked on", self.treeview.item(item,"text"))
+
+		# Coletando qual item está selecionado.
+		item_selecionado = self.treeview.focus()
+
+		# Coletando os dados do item selecionado (dicionário).
+		rowid = self.treeview.item(item_selecionado)
+
+		print(rowid['text'])
+		print('Teste')
+
 
 	def inclui_widgets_cadastro(self, parent):
 		frame = tk.Frame(parent)
