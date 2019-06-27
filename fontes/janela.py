@@ -132,9 +132,8 @@ class Janela(tk.Frame):
 
 
 	def treeOnDoubleClick(self, event):
-		'''item = self.treeview.identify('item',event.x,event.y)'''
-		'''ExecConsole(self.treeview.item(item,"text"))'''
-		Donwload('https://arte.engpro.totvs.com.br/protheus/padrao/latest/repositorio/lobo_guara/tttp120.rpo')
+		item = self.treeview.identify('item',event.x,event.y)
+		ExecConsole(self.treeview.item(item,"text"))
 
 
 	def inclui_widgets_cadastro(self, parent):

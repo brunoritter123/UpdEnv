@@ -5,12 +5,18 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Python: updEnv",
+			"type": "python",
+			"request": "launch",
+			"program": "c:\\Projetos\\UpdEnv\\updEnv.py",
+			"console": "integratedTerminal"
+		},
+		{
 			"name": "Python: Current File (Integrated Terminal)",
 			"type": "python",
 			"request": "launch",
 			"program": "${file}",
-			"args": [
-			],
+			"args": [],
 			"console": "integratedTerminal"
 		},
 		{

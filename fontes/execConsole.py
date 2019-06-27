@@ -7,6 +7,7 @@ import pyodbc
 import os
 import shutil
 import zipfile
+from fontes.donwload import Donwload
 
 class ExecConsole:
 	def __init__(self, idExec = ''):
@@ -37,6 +38,7 @@ class ExecConsole:
 
 		print("""   >Delatando pasta temp""")
 		self.deletarPastaTemp()
+		print("""   >Fim""")
 
 	def deletarPastaTemp(self):
 		try:
@@ -122,34 +124,41 @@ class ExecConsole:
 			para_rpo = self.mdAmbiente.get_para_rpo()
 			para_old_rpo = para_rpo
 
-			barra_de = self.getBarPath(de_rpo)
+			nameRpo = os.path.basename(de_rpo)
 			barra_para = self.getBarPath(para_rpo)
 
-			nameRpo = de_rpo.rsplit(barra_de, 1)[1]
 			para_rpo += barra_para+nameRpo
 			para_old_rpo += barra_para+'old_'+nameRpo
-
-			if os.path.exists(para_old_rpo):
-				os.remove(para_old_rpo)
 
 			if os.path.exists(para_rpo):
 				os.rename(para_rpo, para_old_rpo)
 
-			shutil.copyfile(de_rpo, para_rpo)
+			if de_rpo[:4].lower() == 'http':
+				Donwload(de_rpo, para_rpo)
+			else:
+				shutil.copyfile(de_rpo, para_rpo)
+
+	def concPathDest(self, pathOrigem, pathDest):
+		nomeArquivo = os.path.basename(pathOrigem)
+		barra_para = self.getBarPath(pathDest)
+		return pathDest + barra_para + nomeArquivo
+
 
 	def enviarZip(self, to_path, from_path, tpTransfer):
 		if not isEmpty(to_path) and not isEmpty(from_path):
 			print(f"""      >Transferindo {tpTransfer}""")
-			pathTemp = self.enviarTemp(to_path)
+			pathTemp = self.enviarTemp(to_path, )
 
 			if not isEmpty(pathTemp):
 				self.copy_and_overwrite(pathTemp, from_path)
 
 
 	def getBarPath(self, path):
+		bar = ''
+
 		if path.find('/') >= 0:
 			bar = '/'
-		else:
+		elif path.find('\\') >= 0:
 			bar = '\\'
 		return bar
 
@@ -170,11 +179,25 @@ class ExecConsole:
 			if not isEmpty(nameFile):
 				pathTemp += f'/{nameFile}'
 				shutil.copyfile(pathDb, pathTemp)
-			elif zipfile.is_zipfile(pathDb):
-				zip = zipfile.ZipFile(pathDb)
-				zip.extractall(pathTemp)
 			else:
-				shutil.copytree(pathDb, pathTemp)
+				if pathDb[:4].lower() == 'http':
+					pathDbTemp = self.concPathDest(pathDb, pathTemp)
+					Donwload(pathDb, pathDbTemp)
+				else:
+					pathDbTemp = pathDb
+
+				if zipfile.is_zipfile(pathDbTemp):
+					zip = zipfile.ZipFile(pathDbTemp)
+					zip.extractall(pathTemp)
+					if pathDb[:4].lower() == 'http':
+						try:
+							os.remove(pathDbTemp)
+						except Exception as e:
+							erro = f"Erro ao tentar excluir o arquivo {pathDbTemp}."
+							self.log.write(self.ambienteAual, erro, e)
+
+				else:
+					shutil.copytree(pathDbTemp, pathTemp)
 
 			self.deParaTemp.append({'pathTemp': pathTemp , 'pathBd': pathDb})
 			return pathTemp
